@@ -105,7 +105,7 @@ fun HomeScreen(
         Scaffold(
             bottomBar = {
                 AnimatedVisibility(
-                    visible = selectedTab != 0 || designRoute == DesignRoute.DASHBOARD,
+                    visible = (selectedTab != 0 || designRoute == DesignRoute.DASHBOARD) && !showWidgetPicker && editingWidgetId == null,
                     enter = slideInVertically { it } + fadeIn(),
                     exit = slideOutVertically { it } + fadeOut()
                 ) {

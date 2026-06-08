@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.d4viddf.hyperbridge.R
 import com.d4viddf.hyperbridge.util.parseBold
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -41,6 +42,7 @@ fun ChangelogSheet(
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -93,7 +95,12 @@ fun ChangelogSheet(
 
             // --- CLOSE BUTTON ---
             Button(
-                onClick = onDismiss,
+                onClick = {
+                    coroutineScope.launch {
+                        sheetState.hide()
+                        onDismiss()
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
