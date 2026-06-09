@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -82,6 +83,7 @@ fun SetupHealthScreen(onBack: () -> Unit) {
     // --- STATE ---
     var isListenerGranted by remember { mutableStateOf(isNotificationServiceEnabled(context)) }
     var isPostGranted by remember { mutableStateOf(isPostNotificationsEnabled(context)) }
+    var isOverlayGranted by remember { mutableStateOf(Settings.canDrawOverlays(context)) }
     var isBatteryOptimized by remember { mutableStateOf(isIgnoringBatteryOptimizations(context)) }
     var isFeaturedGranted by remember { mutableStateOf(false) }
 
@@ -92,6 +94,7 @@ fun SetupHealthScreen(onBack: () -> Unit) {
             if (event == Lifecycle.Event.ON_RESUME) {
                 isListenerGranted = isNotificationServiceEnabled(context)
                 isPostGranted = isPostNotificationsEnabled(context)
+                isOverlayGranted = Settings.canDrawOverlays(context)
                 isBatteryOptimized = isIgnoringBatteryOptimizations(context)
                 isFeaturedGranted = XiaomiNotificationHelper.hasFocusPermission(context)
             }
@@ -192,12 +195,28 @@ fun SetupHealthScreen(onBack: () -> Unit) {
                 // Post Notif
                 HealthItem(
                     title = stringResource(R.string.show_island),
-                    subtitle = stringResource(R.string.perm_display_desc),
+                    subtitle = stringResource(R.string.perm_post_desc),
                     icon = Icons.Default.Visibility,
                     isGranted = isPostGranted,
                     onClick = {
                         try {
                             val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                            intent.data = "package:${context.packageName}".toUri()
+                            context.startActivity(intent)
+                        } catch (_: Exception) { }
+                    }
+                )
+
+                // Overlay
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(0.2f))
+                HealthItem(
+                    title = stringResource(R.string.perm_display_title),
+                    subtitle = stringResource(R.string.perm_display_onboard_desc),
+                    icon = Icons.Default.Layers,
+                    isGranted = isOverlayGranted,
+                    onClick = {
+                        try {
+                            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
                             intent.data = "package:${context.packageName}".toUri()
                             context.startActivity(intent)
                         } catch (_: Exception) { }

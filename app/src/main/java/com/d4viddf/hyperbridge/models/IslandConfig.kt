@@ -17,7 +17,7 @@ data class IslandConfig(
             timeout = this.timeout ?: global.timeout ?: 10,
             floatTimeout = this.floatTimeout ?: global.floatTimeout ?: 5,
             removeOriginalNotification = this.removeOriginalNotification ?: global.removeOriginalNotification ?: false,
-            dismissWithOriginal = this.dismissWithOriginal ?: global.dismissWithOriginal ?: false,
+            dismissWithOriginal = this.dismissWithOriginal ?: global.dismissWithOriginal ?: true,
             enableInlineReply = this.enableInlineReply ?: global.enableInlineReply ?: true,
         )
     }

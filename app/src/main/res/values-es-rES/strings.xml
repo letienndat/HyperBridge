@@ -743,4 +743,6 @@
     <string name="inline_reply_title">Respuesta rápida</string>
     <string name="customize_inline_reply">Personalizar el diseño de la respuesta</string>
     <string name="reply_hint">Responder...</string>
+    <string name="perm_display_title">Mostrar sobre otras aplicaciones</string>
+    <string name="perm_display_onboard_desc">Requerido para mostrar la ventana de respuesta rápida.</string>
 </resources>

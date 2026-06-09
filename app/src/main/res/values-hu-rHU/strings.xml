@@ -738,4 +738,6 @@ Továbbfejlesztett felismerési logika a VoIP- és tárcsázóalkalmazások szé
     <string name="inline_reply_title">Inline Reply</string>
     <string name="customize_inline_reply">Customize inline reply overlay</string>
     <string name="reply_hint">Reply...</string>
+    <string name="perm_display_title">Display over other apps</string>
+    <string name="perm_display_onboard_desc">Required to show the custom inline reply overlay.</string>
 </resources>

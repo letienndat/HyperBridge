@@ -744,4 +744,6 @@
     <string name="inline_reply_title">Réponse intégrée</string>
     <string name="customize_inline_reply">Personnaliser la zone de réponse intégrée</string>
     <string name="reply_hint">Répondre...</string>
+    <string name="perm_display_title">Afficher par-dessus les autres applications</string>
+    <string name="perm_display_onboard_desc">Requis pour afficher le bloc de réponse intégrée.</string>
 </resources>

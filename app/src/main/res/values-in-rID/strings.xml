@@ -729,4 +729,6 @@ Penulisan ulang total logika inti untuk stabilitas yang lebih baik.\n
     <string name="inline_reply_title">Balasan Langsung</string>
     <string name="customize_inline_reply">Sesuaikan hamparan balasan langsung</string>
     <string name="reply_hint">Balas...</string>
+    <string name="perm_display_title">Display over other apps</string>
+    <string name="perm_display_onboard_desc">Required to show the custom inline reply overlay.</string>
 </resources>

@@ -47,11 +47,11 @@ class AppPreferences(context: Context) {
         // --- MIGRATION LOGIC ---
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // Force Onboarding reset for version 0.5.0 (versionCode 17)
+                // Force Onboarding reset for new permissions
                 val lastResetVersion = dao.getSetting("onboarding_reset_version")?.toIntOrNull() ?: 0
-                if (lastResetVersion < 18) {
+                if (lastResetVersion < 19) {
                     dao.insert(AppSetting(SettingsKeys.SETUP_COMPLETE, "false"))
-                    dao.insert(AppSetting("onboarding_reset_version", "18"))
+                    dao.insert(AppSetting("onboarding_reset_version", "19"))
                 }
 
                 val isMigrated = dao.getSetting(SettingsKeys.MIGRATION_COMPLETE) == "true"
@@ -193,7 +193,7 @@ class AppPreferences(context: Context) {
             args[2]?.toIntOrNull(),
             args[3]?.toIntOrNull(),
             args[4]?.toBooleanStrictOrNull(),
-            args[5]?.toBooleanStrictOrNull(),
+            args[5]?.toBooleanStrictOrNull() ?: true,
             args[6]?.toBooleanStrictOrNull()
         )
     }
@@ -516,7 +516,7 @@ class AppPreferences(context: Context) {
             memoryCache[SettingsKeys.GLOBAL_TIMEOUT]?.toIntOrNull(),
             memoryCache[SettingsKeys.GLOBAL_FLOAT_TIMEOUT]?.toIntOrNull(),
             memoryCache[SettingsKeys.GLOBAL_REMOVE_NOTIF]?.toBooleanStrictOrNull(),
-            memoryCache[SettingsKeys.GLOBAL_DISMISS_WITH_ORIGINAL]?.toBooleanStrictOrNull(),
+            memoryCache[SettingsKeys.GLOBAL_DISMISS_WITH_ORIGINAL]?.toBooleanStrictOrNull() ?: true,
             memoryCache[SettingsKeys.GLOBAL_ENABLE_INLINE_REPLY]?.toBooleanStrictOrNull()
         )
     }
