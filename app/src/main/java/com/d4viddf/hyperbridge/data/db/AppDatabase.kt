@@ -15,17 +15,13 @@ abstract class AppDatabase : RoomDatabase() {
 
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
-                val instance = Room.databaseBuilder(
+                INSTANCE ?: Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     "hyperbridge_db"
                 )
-                    // Allow main thread queries for migration check (fast) if needed,
-                    // but we will use coroutines.
                     .fallbackToDestructiveMigration(false)
-                    .build()
-                INSTANCE = instance
-                instance
+                    .build().also { INSTANCE = it }
             }
         }
     }

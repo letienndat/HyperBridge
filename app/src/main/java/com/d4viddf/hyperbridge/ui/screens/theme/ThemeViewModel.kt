@@ -547,8 +547,8 @@ class ThemeViewModel(application: Application) : AndroidViewModel(application) {
                             ThemeResource(ResourceType.LOCAL_FILE, "icons/$key.png")
                         } else getThemeById(themeId)?.defaultReply?.sendIcon
                     ),
-                    defaultActions = themeDefaultActions,
-                    apps = _appOverrides.value
+                    defaultActions = themeDefaultActions.toMap(),
+                    apps = _appOverrides.value.toMap()
                 )
 
                 repo.saveTheme(newTheme)

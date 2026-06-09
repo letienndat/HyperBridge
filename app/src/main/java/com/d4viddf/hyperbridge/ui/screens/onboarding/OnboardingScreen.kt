@@ -322,7 +322,7 @@ fun WelcomePage() {
         Spacer(modifier = Modifier.weight(1f))
 
         Image(
-            painter = androidx.compose.ui.res.painterResource(id = R.drawable.ic_launcher_foreground),
+            painter = androidx.compose.ui.res.painterResource(id = R.drawable.ic_logo_foreground),
             contentDescription = stringResource(R.string.logo_desc),
             modifier = Modifier.size(140.dp)
         )

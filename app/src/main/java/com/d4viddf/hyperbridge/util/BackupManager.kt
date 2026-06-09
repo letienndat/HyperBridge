@@ -71,7 +71,7 @@ class BackupManager(
             }
 
             Result.success(true)
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             e.printStackTrace()
             Result.failure(e)
         }
@@ -90,7 +90,7 @@ class BackupManager(
             }
 
             Result.success(backup)
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             Result.failure(e)
         }
     }
@@ -111,7 +111,7 @@ class BackupManager(
             }
 
             Result.success(true)
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             Result.failure(e)
         }
     }
