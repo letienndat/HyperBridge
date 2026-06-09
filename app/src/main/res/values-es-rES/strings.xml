@@ -632,9 +632,13 @@
     <string name="enable_triggers">Habilitar eventos específicos</string>
     <string name="open_source_licenses">Licencias de código abierto</string>
     <string name="live_updates">Comportamiento de la notificación original</string>
+    <string name="remove_original_notification">Eliminar notificación original</string>
+    <string name="remove_original_notification_desc">Descartar automáticamente la notificación original cuando una Live Update está activa.</string>
+    <string name="dismiss_with_original">Descartar con original</string>
+    <string name="dismiss_with_original_desc">La isla desaparecerá cuando elimines la notificación original.</string>
+    <string name="enable_inline_reply">Habilitar respuesta rápida</string>
     <string name="enable_inline_reply_desc">Inicia la superposición de respuesta rápida al responder desde la isla.</string>
     <string name="remove_original_notification_hidden_warning">Nota: Al estar activado, Hyper Bridge no puede responder o marcar mensajes como leídos. Las acciones Responder y Marcar como leído se ocultarán.</string>
-
     <string name="color_mode">Modo de Color</string>
     <string name="color_mode_select">Seleccionar Modo de Color</string>
     <string name="color_mode_change_cd">Cambiar modo de color</string>
@@ -646,34 +650,27 @@
     <string name="color_mode_material_desc">Adaptar al fondo de pantalla del sistema (Monet)</string>
     <string name="color_mode_custom">Colores Personalizados</string>
     <string name="color_mode_custom_desc">Elige tus propios colores manualmente</string>
-
     <string name="reply_textfield_color">Color de Cuadro de Texto</string>
     <string name="reply_textfield_color_desc">Fondo del cuadro de texto</string>
     <string name="reply_text_color">Color del Texto</string>
     <string name="reply_text_color_desc">Color del texto de respuesta</string>
     <string name="reply_send_color">Color de Enviar</string>
     <string name="reply_send_color_desc">Color del icono de enviar</string>
-
     <string name="reply_appearance">Apariencia</string>
     <string name="reply_blur_effect">Efecto Desenfocado</string>
     <string name="reply_blur_effect_desc">Aplica desenfoque tipo cristal al fondo</string>
     <string name="reply_textfield_radius">Borde del Cuadro de Texto</string>
     <string name="reply_send_radius">Borde del Botón de Enviar</string>
-    <string name="remove_original_notification">Eliminar notificación original</string>
-    <string name="remove_original_notification_desc">Descartar automáticamente la notificación original cuando una Live Update está activa.</string>
-    <string name="dismiss_with_original">Descartar con original</string>
-    <string name="dismiss_with_original_desc">La isla desaparecerá cuando elimines la notificación original.</string>
     <string name="onboarding_can_be_changed">Puedes cambiar estas opciones más tarde en Ajustes y el Configurador de Temas.</string>
     <string name="onboarding_widget_desc">Añade widgets estándar de Android a tu isla para un acceso rápido.</string>
     <string name="onboard_theme_desc">Personaliza completamente los colores, formas e iconos de tu isla.</string>
     <string name="onboard_design_desc">Amplía las posibilidades con diferentes opciones de personalización</string>
     <string name="behavior_desc_glob_config">Determina el comportamiento de la isla.</string>
     <string name="widget_layout_snapshot">Vista previa del widget</string>
-    <string name="changelog_0_5_2">
-        <b>¡Nueva Respuesta Rápida!</b>\n
+    <string name="changelog_0_5_2">        <b>¡Nueva Respuesta Rápida!</b>\n
               • <b>Respuesta Rápida:</b> ¡Ahora puedes responder a los mensajes directamente desde la isla sin abrir la app!\n
               • <b>Personalización:</b> Personaliza completamente el aspecto del nuevo editor de respuestas rápidas a nivel global o por aplicación.\n
-              • <b>Ajustes Globales:</b> Accede a la nueva sección de personalización de Respuestas directamente desde los Ajustes Globales -> Respuesta Rápida.\n
+              • <b>Ajustes Globales:</b> Accede a la nueva sección de personalización de Respuestas directamente desde los Ajustes Globales -&gt; Respuesta Rápida.\n
         \n
         <b>Actualización de Rendimiento y Estabilidad</b>\n
               • <b>Creador de Temas:</b> Se resolvió un cierre inesperado al cargar conjuntos de iconos grandes.\n
@@ -743,7 +740,6 @@
     <string name="system_config_info_supported_label">Soportado: %1$s</string>
     <string name="system_config_info_permission_label">Permiso: %1$s</string>
     <string name="notification_management">Gestión de Notificaciones</string>
-    <string name="enable_inline_reply">Habilitar respuesta rápida</string>
     <string name="inline_reply_title">Respuesta rápida</string>
     <string name="customize_inline_reply">Personalizar el diseño de la respuesta</string>
     <string name="reply_hint">Responder...</string>

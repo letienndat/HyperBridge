@@ -636,22 +636,52 @@
     <string name="remove_original_notification_desc">Ignorer automatiquement la notification source quand une mise à jour en direct est active.</string>
     <string name="dismiss_with_original">Rejeter avec l\'origine</string>
     <string name="dismiss_with_original_desc">La bulle de notification disparaîtra lorsque vous effacerez la notification d\'origine.</string>
+    <string name="enable_inline_reply">Activer la réponse intégrée</string>
+    <string name="enable_inline_reply_desc">Lancez la superposition de réponse intégrée personnalisée lorsque vous répondez depuis la bulle de notification.</string>
+    <string name="remove_original_notification_hidden_warning">Remarque : Lorsque cette option est activée, Hyper Bridge ne peut pas répondre ou marquer les messages comme lus. Répondre et Marquer comme lu les actions seront masquées.</string>
+    <string name="color_mode">Jeu de couleurs</string>
+    <string name="color_mode_select">Sélectionner le mode de couleur</string>
+    <string name="color_mode_change_cd">Changer le mode de couleur</string>
+    <string name="color_mode_default">Par défaut</string>
+    <string name="color_mode_default_desc">Utiliser les couleurs standard par défaut</string>
+    <string name="color_mode_app">Couleurs de l\'application</string>
+    <string name="color_mode_app_desc">Extraire les couleurs de l\'icône de l\'application</string>
+    <string name="color_mode_material">Material You</string>
+    <string name="color_mode_material_desc">Faire correspondre le fond d\'écran système (Monet)</string>
+    <string name="color_mode_custom">Couleurs personnalisées</string>
+    <string name="color_mode_custom_desc">Choisir manuellement vos propres couleurs</string>
+    <string name="reply_textfield_color">Couleur du champ de texte</string>
+    <string name="reply_textfield_color_desc">Arrière-plan de la zone de texte intérieure</string>
+    <string name="reply_text_color">Couleur du texte</string>
+    <string name="reply_text_color_desc">Couleur du texte de réponse</string>
+    <string name="reply_send_color">Couleur du bouton d\'envoi</string>
+    <string name="reply_send_color_desc">Couleur de l\'icône d\'envoi</string>
+    <string name="reply_appearance">Apparence</string>
+    <string name="reply_blur_effect">Effet de flou</string>
+    <string name="reply_blur_effect_desc">Appliquer un effet glassmorphisme au champ de texte</string>
+    <string name="reply_textfield_radius">Arrondi des coins du champ de texte</string>
+    <string name="reply_send_radius">Arrondi des coins du bouton d\'envoi</string>
     <string name="onboarding_can_be_changed">Vous pourrez modifier ces options plus tard dans Paramètres et Configurateur de thèmes.</string>
     <string name="onboarding_widget_desc">Ajoutez des widgets Android à votre bulle de notification pour un accès rapide.</string>
     <string name="onboard_theme_desc">Personnalisez entièrement les couleurs, les formes et les icônes de vos bulles de notification.</string>
     <string name="onboard_design_desc">Augmentez les possibilités avec différentes options de personnalisation</string>
     <string name="behavior_desc_glob_config">Détermine le comportement de la bulle de notification.</string>
     <string name="widget_layout_snapshot">Aperçu du widget</string>
-    <string name="changelog_0_5_2">        <b>Correction de crash du Play Store &amp; Stabilité</b>\n
-              ? <b>Créateur de thème :</b> Correction d\'un plantage lors de l\'analyse d\'un grand nombre d\'actifs personnalisés.\n
-              ? <b>Performances :</b> Résolution d\'un problème d’application qui ne répond plus (ANR) sur l’écran initial de bienvenue.\n
-              ? <b>Widget Picker:</b> Elimination de plantages et d\'erreurs Out-Of-Memory (OOM) causés par une prévisualisation de Widget extremement large.\n
-              ? <b>Dispositions de l\'interface utilisateur :</b> Correction des exceptions sur les contraintes de mise en page de composition de Jetpack qui plantaient l\'application lors du redimensionnement de certains menus.\n
-              ? <b>Sauvegardes :</b> Erreurs OOM résolues lors de l\'importation de gros fichiers de sauvegarde en optimisant l\'analyse JSON.\n
-              ? <b>Démarrage chaud :</b> Amélioration significative des vitesses de lancement des applications et élimination du blocage des piles d\'interface utilisateur sur les appareils de milieu de gamme.\n
-              ? <b>Service d\'arrière-plan :</b> Révision complète de l\'architecture du traitement d\'écoute, chute de la charge en arrière-plan à 0 % et amélioration de la durée de vie de la batterie.\n
+    <string name="changelog_0_5_2">        <b>Nouvelle fonctionnalité de réponse intégrée !</b>\n
+              • <b>Réponse intégrée :</b> Vous pouvez désormais répondre aux messages directement depuis la notification sans ouvrir l\'application !\n
+              • <b>Personnalisation :</b> Personnalisez entièrement l\'apparence du nouvel éditeur de réponse intégrée, soit globalement, soit par application.\n
+              • <b>Paramètres généraux :</b> Accédez à la nouvelle section de personnalisation des réponses directement depuis Paramètres généraux -&gt; Réponse intégrée.\n
+        \n
+        <b>Correction de crash du Play Store &amp; Stabilité</b>\n
+              • <b>Créateur de thème :</b> Correction d\'un plantage lors de l\'analyse d\'un grand nombre d\'actifs personnalisés.\n
+              • <b>Performances :</b> Résolution d\'un problème d’application qui ne répond plus (ANR) sur l’écran initial de bienvenue.\n
+              • <b>Widget Picker:</b> Elimination de plantages et d\'erreurs Out-Of-Memory (OOM) causés par une prévisualisation de Widget extremement large.\n
+              • <b>Dispositions de l\'interface utilisateur :</b> Correction des exceptions sur les contraintes de mise en page de composition de Jetpack qui plantaient l\'application lors du redimensionnement de certains menus.\n
+              • <b>Sauvegardes :</b> Erreurs OOM corrigées lors de l\'importation de gros fichiers de sauvegarde en optimisant l\'analyse JSON.\n
+              • <b>Démarrage chaud :</b> Amélioration significative des vitesses de lancement des applications et élimination du blocage des piles d\'interface utilisateur sur les appareils de milieu de gamme.\n
+              • <b>Service d\'arrière-plan :</b> Révision complète de l\'architecture du traitement d\'écoute, chute de la charge en arrière-plan à 0 % et amélioration de la durée de vie de la batterie.\n
     </string>
-    <string name="title_0_5_2">Mise à jour de la stabilité &amp; des performances</string>
+    <string name="title_0_5_2">Réponse intégrée, performance &amp; stabilité</string>
     <string name="changelog_0_5_1">        <b>Corrections &amp; stabilité</b>\n
               Correction des doublons WhatsApp : résolution d\'un problème qui entraînait l\'affichage de notifications WhatsApp en double.\n
               Correction du scintillement des notifications &amp; des plantages : correction d\'un plantage provoqué par la réception de plusieurs notifications en peu de temps. L\'application met désormais à jour les notifications normalement et en toute sécurité, ce qui élimine le scintillement des notifications et améliore la stabilité.\n
@@ -711,4 +741,7 @@
     <string name="system_config_info_supported_label">Pris en charge : %1$s</string>
     <string name="system_config_info_permission_label">Permissions %1$s</string>
     <string name="notification_management">Gestion des notifications</string>
+    <string name="inline_reply_title">Réponse intégrée</string>
+    <string name="customize_inline_reply">Personnaliser la zone de réponse intégrée</string>
+    <string name="reply_hint">Répondre...</string>
 </resources>

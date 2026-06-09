@@ -52,10 +52,10 @@
     <string name="system_setup">Configuração do Sistema</string>
     <string name="system_setup_subtitle">Corrigir permissões e bateria</string>
     <!-- Permanent Island -->
-    <string name="permanent_island_title">Permanent Island</string>
-    <string name="permanent_island_desc">Keep the Dynamic Island permanently visible on screen when there are no active notifications.</string>
-    <string name="permanent_island_screen_desc">When enabled, an empty Dynamic Island will be shown permanently on your screen. It will automatically hide when real notifications arrive and reappear when all notifications are cleared. It will not be visible in your notification shade.</string>
-    <string name="permanent_island_width">Island Width</string>
+    <string name="permanent_island_title">Ilha Permanente</string>
+    <string name="permanent_island_desc">Mantenha a Ilha Dinâmica permanentemente visível na tela quando não houver notificações ativas.</string>
+    <string name="permanent_island_screen_desc">Quando ativada, uma Ilha Dinâmica vazia será exibida permanentemente na sua tela. Ela se ocultará automaticamente quando notificações reais chegarem e reaparecerá quando todas as notificações forem apagadas. Ela não ficará visível na sua área de notificações.</string>
+    <string name="permanent_island_width">Largura da ilha</string>
     <string name="group_about">Sobre</string>
     <string name="developer">Desenvolvedor</string>
     <string name="developer_subtitle">Visite d4viddf.com</string>
@@ -86,7 +86,7 @@
     <string name="select_active_notifs">Selecionar notificações ativas</string>
     <string name="type_standard">Mensagens e Geral</string>
     <string name="type_progress">Downloads e Progresso</string>
-    <string name="type_download">Downloads</string>
+    <string name="type_download">Transferências</string>
     <string name="type_media">Música e Mídia</string>
     <string name="type_nav">Mapas e GPS</string>
     <string name="type_call">Chamadas</string>
@@ -141,7 +141,7 @@
     <string name="island_appearance">Aparência da Ilha</string>
     <string name="setting_float">Pop-up Flutuante</string>
     <string name="setting_float_desc">Mostra o banner completo da notificação brevemente antes de minimizar para a Ilha.</string>
-    <string name="setting_float_timeout_desc">How long the heads-up popup stays visible.</string>
+    <string name="setting_float_timeout_desc">Por quanto tempo o pop-up de aviso permanece visível.</string>
     <string name="setting_shade">Painel de Notificação</string>
     <string name="setting_shade_desc">Mantém a notificação visível no painel do sistema. Se desativado, ela aparecerá apenas como uma Ilha.</string>
     <string name="setting_timeout">Delay para fechar automaticamente</string>
@@ -241,7 +241,7 @@ Novas notificações substituem as mais antigas automaticamente.</string>
     <string name="shizuku_workaround_title">Enable Shizuku Workaround</string>
     <string name="shizuku_enable_workaround">Enable Workaround</string>
     <string name="shizuku_workaround_desc">If you are on a CN ROM, you must enable the Shizuku Workaround for notifications to trigger correctly.</string>
-    <string name="shizuku_status_running">Shizuku is running</string>
+    <string name="shizuku_status_running">Membro Médico Shizuku</string>
     <string name="shizuku_status_not_running">Shizuku is not running</string>
     <string name="shizuku_permission_granted">Permission Granted</string>
     <string name="shizuku_permission_denied">Permission Denied</string>
@@ -644,6 +644,31 @@ Por favor, verifique manualmente para garantir que o serviço funcione corretame
     <string name="remove_original_notification_desc">Automatically dismiss the source notification when a Live Update is active.</string>
     <string name="dismiss_with_original">Dismiss with original</string>
     <string name="dismiss_with_original_desc">Island will disappear when you clear the original notification.</string>
+    <string name="enable_inline_reply">Enable inline reply</string>
+    <string name="enable_inline_reply_desc">Launch the custom inline reply overlay when replying from the island.</string>
+    <string name="remove_original_notification_hidden_warning">Note: When enabled, Hyper Bridge cannot respond or mark messages as read. Reply and Mark as Read actions will be hidden.</string>
+    <string name="color_mode">Color Mode</string>
+    <string name="color_mode_select">Select Color Mode</string>
+    <string name="color_mode_change_cd">Change color mode</string>
+    <string name="color_mode_default">Default</string>
+    <string name="color_mode_default_desc">Use default standard colors</string>
+    <string name="color_mode_app">App Colors</string>
+    <string name="color_mode_app_desc">Extract colors from the app icon</string>
+    <string name="color_mode_material">Material You</string>
+    <string name="color_mode_material_desc">Match the system wallpaper (Monet)</string>
+    <string name="color_mode_custom">Custom Colors</string>
+    <string name="color_mode_custom_desc">Manually choose your own colors</string>
+    <string name="reply_textfield_color">Textfield Color</string>
+    <string name="reply_textfield_color_desc">Inner text box background</string>
+    <string name="reply_text_color">Text Color</string>
+    <string name="reply_text_color_desc">Reply text color</string>
+    <string name="reply_send_color">Send Button Color</string>
+    <string name="reply_send_color_desc">Send icon color</string>
+    <string name="reply_appearance">Appearance</string>
+    <string name="reply_blur_effect">Blur Effect</string>
+    <string name="reply_blur_effect_desc">Apply glassmorphism to textfield</string>
+    <string name="reply_textfield_radius">Textfield Corner Radius</string>
+    <string name="reply_send_radius">Send Button Corner Radius</string>
     <string name="onboarding_can_be_changed">You can change these options later in Settings and Theme Configurator.</string>
     <string name="onboarding_widget_desc">Add standard Android widgets to your island for quick access.</string>
     <string name="onboard_theme_desc">Fully customize colors, shapes and icons of your island.</string>
@@ -719,4 +744,7 @@ Por favor, verifique manualmente para garantir que o serviço funcione corretame
     <string name="system_config_info_supported_label">Supported: %1$s</string>
     <string name="system_config_info_permission_label">Permissão: %1$s</string>
     <string name="notification_management">Gestão de notificações</string>
+    <string name="inline_reply_title">Inline Reply</string>
+    <string name="customize_inline_reply">Customize inline reply overlay</string>
+    <string name="reply_hint">Reply...</string>
 </resources>

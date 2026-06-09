@@ -81,16 +81,17 @@ class PermanentIslandManager(
             builder.setEnableFloat(false)
             builder.setIslandConfig(timeout = 0, dismissible = false, highlightColor = "#FFFFFF", expandedTimeMs = 0)
             builder.setShowNotification(false)
-            builder.setReopen(false)
+            builder.setReopen(true)
             builder.setIslandFirstFloat(false)
 
-            // Only big paramislands with empty values for textonleft and picKey = ""
+            // Only big paramislands with empty values for textonleft and picKey = null
             // Use width spaces to change width
             val emptyString = "\u00A0".repeat(currentWidth)
             builder.setBigIslandInfo(
                 left = ImageTextInfoLeft(1, null, TextInfo(emptyString, emptyString)),
                 right = null
             )
+            builder.setSmallIsland("")
 
             val data = HyperIslandData(builder.buildResourceBundle(), builder.buildJsonParam())
 
