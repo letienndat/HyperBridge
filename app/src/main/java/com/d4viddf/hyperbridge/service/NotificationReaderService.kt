@@ -80,6 +80,7 @@ class NotificationReaderService : NotificationListenerService() {
     private var autoDetectDnd = false
 
     // --- CACHES ---
+    private val recentlyRemovedKeys = ConcurrentHashMap<String, Long>()
     private val activeIslands = ConcurrentHashMap<String, ActiveIsland>()
     private val activeTranslations = ConcurrentHashMap<String, Int>()
     private val reverseTranslations = ConcurrentHashMap<Int, String>()
@@ -114,10 +115,12 @@ class NotificationReaderService : NotificationListenerService() {
     private lateinit var widgetTranslator: WidgetTranslator
     private lateinit var liveUpdateTranslator: LiveUpdateTranslator
 
-    private val userUnlockedReceiver = object : BroadcastReceiver() {
+    private val systemReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action == Intent.ACTION_USER_UNLOCKED) {
                 WidgetManager.init(this@NotificationReaderService)
+            } else if (intent.action == Intent.ACTION_SCREEN_ON) {
+                syncNotifications()
             }
         }
     }
@@ -154,7 +157,8 @@ class NotificationReaderService : NotificationListenerService() {
         super.onCreate()
         
         val filter = IntentFilter(Intent.ACTION_USER_UNLOCKED)
-        registerReceiver(userUnlockedReceiver, filter)
+        filter.addAction(Intent.ACTION_SCREEN_ON)
+        registerReceiver(systemReceiver, filter)
         
         val clickFilter = IntentFilter("com.d4viddf.hyperbridge.ISLAND_CLICKED")
         androidx.core.content.ContextCompat.registerReceiver(
@@ -361,7 +365,7 @@ class NotificationReaderService : NotificationListenerService() {
     //  NOTIFICATION REMOVAL LOGIC
     // =========================================================================
 
-    override fun onNotificationRemoved(sbn: StatusBarNotification?) {
+    override fun onNotificationRemoved(sbn: StatusBarNotification?, rankingMap: RankingMap?, reason: Int) {
         sbn?.let {
             val isOurApp = it.packageName == packageName
             val notifId = it.id
@@ -371,6 +375,8 @@ class NotificationReaderService : NotificationListenerService() {
                 return
             }
 
+            recentlyRemovedKeys[notifKey] = System.currentTimeMillis()
+
             processingJobs[notifKey]?.cancel()
             processingJobs.remove(notifKey)
 
@@ -378,6 +384,12 @@ class NotificationReaderService : NotificationListenerService() {
             timeoutJobs.remove(notifKey)
 
             if (isOurApp) {
+                // Only process user-initiated dismissals for our notifications. 
+                // Ignore programmatic cancels (e.g., during updates or Shizuku workarounds).
+                if (reason != REASON_CANCEL && reason != REASON_CANCEL_ALL) {
+                    return
+                }
+
                 if (notifId >= WIDGET_ID_BASE) {
                     val widgetId = notifId - WIDGET_ID_BASE
                     dismissedWidgetIds.add(widgetId)
@@ -394,6 +406,11 @@ class NotificationReaderService : NotificationListenerService() {
                 if (originalKey != null) {
                     Log.d(TAG, "Our notification $notifId removed. Cleaning up cache for $originalKey")
                     // [FIX] We no longer kill the source notification when our Island is dismissed or timed out
+                    try {
+                        activeIslands[originalKey]?.deleteIntent?.send()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error sending delete intent for original notification", e)
+                    }
                     cleanupCache(originalKey)
                 }
                 return
@@ -407,8 +424,16 @@ class NotificationReaderService : NotificationListenerService() {
                     val globalConfig = preferences.getGlobalConfigSync()
                     val finalConfig = appConfig.mergeWith(globalConfig)
 
-                    if (finalConfig.dismissWithOriginal == true) {
-                        kotlinx.coroutines.delay(300)
+                    val islandType = activeIslands[notifKey]?.type
+                    val forceDismiss = islandType == NotificationType.CALL || 
+                                       islandType == NotificationType.MEDIA || 
+                                       islandType == NotificationType.NAVIGATION
+
+                    if (finalConfig.dismissWithOriginal == true || forceDismiss) {
+                        // Debounce updates if the app canceled it programmatically
+                        if (reason == REASON_APP_CANCEL) {
+                            kotlinx.coroutines.delay(300)
+                        }
                         try {
                             NotificationManagerCompat.from(this@NotificationReaderService).cancel(hyperId)
                         } catch (_: Exception) {}
@@ -711,7 +736,7 @@ class NotificationReaderService : NotificationListenerService() {
                 activeIslands[effectiveKey] = ActiveIsland(
                     id = bridgeId, type = type, postTime = System.currentTimeMillis(),
                     packageName = sbn.packageName, groupKey = sbn.groupKey, title = effectiveTitle, text = effectiveText,
-                    subText = "LiveUpdate", lastContentHash = newContentHash
+                    subText = "LiveUpdate", lastContentHash = newContentHash, deleteIntent = sbn.notification.deleteIntent
                 )
                 permanentIslandManager.onActiveNotificationsChanged(activeIslands.size + activeWidgets.size)
 
@@ -738,6 +763,14 @@ class NotificationReaderService : NotificationListenerService() {
             val newContentHash = data.jsonParam.hashCode()
             if (isUpdate && previous != null && previous.lastContentHash == newContentHash) return
 
+            kotlinx.coroutines.yield()
+
+            val removedTime = recentlyRemovedKeys[rawSbn.key]
+            if (removedTime != null && System.currentTimeMillis() - removedTime < 2000) {
+                Log.d(TAG, "Skipping post because notification was recently removed: ${rawSbn.key}")
+                return
+            }
+
             val shouldAlertOnce = isUpdate && (type == NotificationType.PROGRESS || type == NotificationType.DOWNLOAD || type == NotificationType.MEDIA)
 
             Log.i(TAG, " POSTING Island -> ID: $bridgeId, Type: $type, FinalTitle: '$effectiveTitle', FinalText: '$effectiveText'")
@@ -746,7 +779,7 @@ class NotificationReaderService : NotificationListenerService() {
             activeIslands[effectiveKey] = ActiveIsland(
                 id = bridgeId, type = type, postTime = System.currentTimeMillis(),
                 packageName = sbn.packageName, groupKey = sbn.groupKey, title = effectiveTitle, text = effectiveText,
-                subText = "", lastContentHash = newContentHash
+                subText = "", lastContentHash = newContentHash, deleteIntent = sbn.notification.deleteIntent
             )
             permanentIslandManager.onActiveNotificationsChanged(activeIslands.size + activeWidgets.size)
 
@@ -1099,11 +1132,71 @@ class NotificationReaderService : NotificationListenerService() {
     private fun shouldIgnore(packageName: String): Boolean = packageName == this.packageName || packageName == "android" || packageName.contains("miui.notification")
     private fun isAppAllowed(packageName: String): Boolean = allowedPackageSet.contains(packageName)
 
-    override fun onListenerConnected() { Log.i(TAG, "HyperBridge Service Connected") }
+    private var syncJob: Job? = null
+
+    override fun onListenerConnected() { 
+        Log.i(TAG, "HyperBridge Service Connected")
+        syncJob?.cancel()
+        syncJob = serviceScope.launch {
+            while (true) {
+                delay(60_000) // 1 minute periodic sync
+                syncNotifications()
+            }
+        }
+    }
+
+    private fun syncNotifications() {
+        val now = System.currentTimeMillis()
+        recentlyRemovedKeys.entries.removeIf { now - it.value > 10000 }
+
+        serviceScope.launch(Dispatchers.IO) {
+            try {
+                val currentNotifications = activeNotifications ?: return@launch
+                val currentKeys = currentNotifications.map { it.key }.toSet()
+                
+                val keysToRemove = mutableListOf<String>()
+                for ((originalKey, activeIsland) in activeIslands) {
+                    if (!currentKeys.contains(originalKey)) {
+                        val appConfig = preferences.getAppIslandConfigSync(activeIsland.packageName)
+                        val globalConfig = preferences.getGlobalConfigSync()
+                        val finalConfig = appConfig.mergeWith(globalConfig)
+
+                        val forceDismiss = activeIsland.type == NotificationType.CALL || 
+                                           activeIsland.type == NotificationType.MEDIA || 
+                                           activeIsland.type == NotificationType.NAVIGATION
+
+                        // If the app intentionally removes the original notification, it's expected to be missing from currentKeys.
+                        if (!forceDismiss && finalConfig.removeOriginalNotification == true) {
+                            continue
+                        }
+
+                        if (finalConfig.dismissWithOriginal == true || forceDismiss) {
+                            keysToRemove.add(originalKey)
+                        }
+                    }
+                }
+
+                for (key in keysToRemove) {
+                    Log.d(TAG, "Sync: Found stuck notification $key, removing.")
+                    val hyperId = activeTranslations[key]
+                    if (hyperId != null) {
+                        try {
+                            NotificationManagerCompat.from(this@NotificationReaderService).cancel(hyperId)
+                        } catch (_: Exception) {}
+                    }
+                    cleanupCache(key)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error syncing notifications", e)
+            }
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
-        unregisterReceiver(userUnlockedReceiver)
+        unregisterReceiver(systemReceiver)
         unregisterReceiver(islandClickReceiver)
+        syncJob?.cancel()
         serviceScope.cancel() 
     }
 }
