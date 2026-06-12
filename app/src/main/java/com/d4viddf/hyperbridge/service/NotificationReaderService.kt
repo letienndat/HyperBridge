@@ -34,6 +34,7 @@ import com.d4viddf.hyperbridge.models.WidgetRenderMode
 import com.d4viddf.hyperbridge.service.translators.CallTranslator
 import com.d4viddf.hyperbridge.service.translators.LiveUpdateTranslator
 import com.d4viddf.hyperbridge.service.translators.MediaTranslator
+import com.d4viddf.hyperbridge.service.translators.MessageTranslator
 import com.d4viddf.hyperbridge.service.translators.NavTranslator
 import com.d4viddf.hyperbridge.service.translators.ProgressTranslator
 import com.d4viddf.hyperbridge.service.translators.DownloadTranslator
@@ -84,6 +85,7 @@ class NotificationReaderService : NotificationListenerService() {
     private val reverseTranslations = ConcurrentHashMap<Int, String>()
     private val processingJobs = ConcurrentHashMap<String, Job>()
     private val timeoutJobs = ConcurrentHashMap<String, Job>()
+    private val removalJobs = ConcurrentHashMap<String, Job>()
     private lateinit var permanentIslandManager: PermanentIslandManager
     private val intentionallyRemovedKeys = ConcurrentHashMap.newKeySet<String>()
     private val widgetUpdateDebouncer = ConcurrentHashMap<Int, Long>()
@@ -107,6 +109,7 @@ class NotificationReaderService : NotificationListenerService() {
     private lateinit var progressTranslator: ProgressTranslator
     private lateinit var downloadTranslator: DownloadTranslator
     private lateinit var standardTranslator: StandardTranslator
+    private lateinit var messageTranslator: MessageTranslator
     private lateinit var mediaTranslator: MediaTranslator
     private lateinit var widgetTranslator: WidgetTranslator
     private lateinit var liveUpdateTranslator: LiveUpdateTranslator
@@ -119,12 +122,47 @@ class NotificationReaderService : NotificationListenerService() {
         }
     }
 
+    private val islandClickReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == "com.d4viddf.hyperbridge.ISLAND_CLICKED") {
+                val sbnKey = intent.getStringExtra("sbn_key")
+                val bridgeId = intent.getIntExtra("bridge_id", -1)
+                @Suppress("DEPRECATION")
+                val originalIntent = intent.getParcelableExtra<PendingIntent>("original_intent")
+
+                if (originalIntent != null) {
+                    try {
+                        originalIntent.send()
+                    } catch (e: PendingIntent.CanceledException) {
+                        Log.e("HyperBridge", "PendingIntent canceled", e)
+                    }
+                }
+
+                if (sbnKey != null) {
+                    cancelNotification(sbnKey)
+                }
+
+                if (bridgeId != -1) {
+                    ShizukuManager.cancel(context, bridgeId)
+                }
+            }
+        }
+    }
+
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     override fun onCreate() {
         super.onCreate()
         
         val filter = IntentFilter(Intent.ACTION_USER_UNLOCKED)
         registerReceiver(userUnlockedReceiver, filter)
+        
+        val clickFilter = IntentFilter("com.d4viddf.hyperbridge.ISLAND_CLICKED")
+        androidx.core.content.ContextCompat.registerReceiver(
+            this,
+            islandClickReceiver,
+            clickFilter,
+            androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED
+        )
         
         preferences = AppPreferences(applicationContext)
         createChannels()
@@ -140,6 +178,7 @@ class NotificationReaderService : NotificationListenerService() {
         progressTranslator = ProgressTranslator(this, themeRepository)
         downloadTranslator = DownloadTranslator(this, themeRepository)
         standardTranslator = StandardTranslator(this, themeRepository)
+        messageTranslator = MessageTranslator(this, themeRepository)
         liveUpdateTranslator = LiveUpdateTranslator(this, themeRepository)
 
         mediaTranslator = MediaTranslator(this)
@@ -363,19 +402,21 @@ class NotificationReaderService : NotificationListenerService() {
             if (activeTranslations.containsKey(notifKey)) {
                 val hyperId = activeTranslations[notifKey] ?: return
 
-                serviceScope.launch(Dispatchers.IO) {
+                val job = serviceScope.launch(Dispatchers.IO) {
                     val appConfig = preferences.getAppIslandConfigSync(sbn.packageName)
                     val globalConfig = preferences.getGlobalConfigSync()
                     val finalConfig = appConfig.mergeWith(globalConfig)
 
                     if (finalConfig.dismissWithOriginal == true) {
+                        kotlinx.coroutines.delay(300)
                         try {
                             NotificationManagerCompat.from(this@NotificationReaderService).cancel(hyperId)
                         } catch (_: Exception) {}
-
                         cleanupCache(notifKey)
                     }
+                    removalJobs.remove(notifKey)
                 }
+                removalJobs[notifKey] = job
             }
         }
     }
@@ -534,7 +575,66 @@ class NotificationReaderService : NotificationListenerService() {
                 return
             }
 
-            val isUpdate = activeIslands.containsKey(key)
+            var effectiveKey = key
+            removalJobs[effectiveKey]?.cancel()
+            removalJobs.remove(effectiveKey)
+            var isUpdate = activeIslands.containsKey(effectiveKey)
+            var bridgeId = sbn.key.hashCode()
+
+            if (!isUpdate && type == NotificationType.MESSAGE && sbn.groupKey != null) {
+                val existingEntry = activeIslands.entries.find {
+                    it.value.type == NotificationType.MESSAGE &&
+                    it.value.packageName == sbn.packageName &&
+                    it.value.groupKey == sbn.groupKey
+                }
+
+                if (existingEntry != null) {
+                    val oldKey = existingEntry.key
+                    bridgeId = existingEntry.value.id
+                    effectiveKey = oldKey
+                    isUpdate = true
+
+                    activeIslands.remove(oldKey)
+                    activeTranslations.remove(oldKey)
+                    timeoutJobs[oldKey]?.cancel()
+                    timeoutJobs.remove(oldKey)
+
+                    effectiveKey = key
+                    activeTranslations[effectiveKey] = bridgeId
+                    reverseTranslations[bridgeId] = effectiveKey
+                }
+            }
+
+            if (!isUpdate && (type == NotificationType.DOWNLOAD || type == NotificationType.PROGRESS)) {
+                val existingEntries = activeIslands.entries.filter {
+                    it.value.packageName == sbn.packageName &&
+                    (it.value.type == NotificationType.DOWNLOAD || it.value.type == NotificationType.PROGRESS)
+                }
+                
+                val existingEntry = if (existingEntries.size == 1) {
+                    existingEntries.first()
+                } else {
+                    existingEntries.find { it.value.title == effectiveTitle }
+                }
+
+                if (existingEntry != null) {
+                    val oldKey = existingEntry.key
+                    bridgeId = existingEntry.value.id
+                    effectiveKey = oldKey
+                    isUpdate = true
+
+                    activeIslands.remove(oldKey)
+                    activeTranslations.remove(oldKey)
+                    timeoutJobs[oldKey]?.cancel()
+                    timeoutJobs.remove(oldKey)
+                    removalJobs[oldKey]?.cancel()
+                    removalJobs.remove(oldKey)
+
+                    effectiveKey = key
+                    activeTranslations[effectiveKey] = bridgeId
+                    reverseTranslations[bridgeId] = effectiveKey
+                }
+            }
 
             if (!isUpdate && activeIslands.size >= MAX_ISLANDS) {
                 handleLimitReached(type, sbn.packageName)
@@ -544,8 +644,6 @@ class NotificationReaderService : NotificationListenerService() {
             val appIslandConfig = preferences.getAppIslandConfigSync(sbn.packageName)
             val globalConfig = preferences.getGlobalConfigSync()
             val finalConfig = appIslandConfig.mergeWith(globalConfig)
-
-            val bridgeId = sbn.key.hashCode()
             val picKey = "pic_${bridgeId}"
 
             // --- LAYERED ENGINE LOGIC ---
@@ -602,18 +700,22 @@ class NotificationReaderService : NotificationListenerService() {
 
                 if (isUpdate && previous != null && previous.lastContentHash == newContentHash) return
 
-                ShizukuManager.notify(this, bridgeId, notification)
+                if (!shouldAlertOnce) {
+                    ShizukuManager.notify(this, bridgeId, notification)
+                } else {
+                    NotificationManagerCompat.from(this).notify(bridgeId, notification)
+                }
 
-                activeTranslations[sbn.key] = bridgeId
-                reverseTranslations[bridgeId] = sbn.key
-                activeIslands[key] = ActiveIsland(
+                activeTranslations[effectiveKey] = bridgeId
+                reverseTranslations[bridgeId] = effectiveKey
+                activeIslands[effectiveKey] = ActiveIsland(
                     id = bridgeId, type = type, postTime = System.currentTimeMillis(),
-                    packageName = sbn.packageName, title = effectiveTitle, text = effectiveText,
+                    packageName = sbn.packageName, groupKey = sbn.groupKey, title = effectiveTitle, text = effectiveText,
                     subText = "LiveUpdate", lastContentHash = newContentHash
                 )
                 permanentIslandManager.onActiveNotificationsChanged(activeIslands.size + activeWidgets.size)
 
-                handlePostNotificationSideEffects(key, bridgeId, finalConfig, type, true)
+                handlePostNotificationSideEffects(effectiveKey, bridgeId, finalConfig, type, true)
                 return
             }
 
@@ -629,6 +731,7 @@ class NotificationReaderService : NotificationListenerService() {
                 NotificationType.PROGRESS -> progressTranslator.translate(sbn, effectiveTitle, picKey, finalConfig, activeTheme, isUpdate)
                 NotificationType.DOWNLOAD -> downloadTranslator.translate(sbn, effectiveTitle, picKey, finalConfig, activeTheme, isUpdate)
                 NotificationType.MEDIA -> mediaTranslator.translate(sbn, picKey, finalConfig)
+                NotificationType.MESSAGE -> messageTranslator.translate(sbn, effectiveTitle, effectiveText, picKey, finalConfig, activeTheme)
                 else -> standardTranslator.translate(sbn, effectiveTitle, effectiveText, picKey, finalConfig, activeTheme)
             }
 
@@ -640,14 +743,14 @@ class NotificationReaderService : NotificationListenerService() {
             Log.i(TAG, " POSTING Island -> ID: $bridgeId, Type: $type, FinalTitle: '$effectiveTitle', FinalText: '$effectiveText'")
             postStandardNotification(sbn, bridgeId, data, shouldAlertOnce)
 
-            activeIslands[key] = ActiveIsland(
+            activeIslands[effectiveKey] = ActiveIsland(
                 id = bridgeId, type = type, postTime = System.currentTimeMillis(),
-                packageName = sbn.packageName, title = effectiveTitle, text = effectiveText,
+                packageName = sbn.packageName, groupKey = sbn.groupKey, title = effectiveTitle, text = effectiveText,
                 subText = "", lastContentHash = newContentHash
             )
             permanentIslandManager.onActiveNotificationsChanged(activeIslands.size + activeWidgets.size)
 
-            handlePostNotificationSideEffects(key, bridgeId, finalConfig, type, false)
+            handlePostNotificationSideEffects(effectiveKey, bridgeId, finalConfig, type, false)
 
         } catch (e: Exception) {
             Log.e(TAG, "💥 Error processing standard notification", e)
@@ -700,9 +803,11 @@ class NotificationReaderService : NotificationListenerService() {
     private fun hasProgressNotification(sbn: StatusBarNotification, title: String, text: String): Boolean {
         val extras = sbn.notification.extras
         val isDownload = isDownloadNotification(sbn, title, text)
+        val isOngoing = (sbn.notification.flags and Notification.FLAG_ONGOING_EVENT) != 0
         return extras.getInt(Notification.EXTRA_PROGRESS_MAX, 0) > 0 ||
                 extras.getBoolean(Notification.EXTRA_PROGRESS_INDETERMINATE) ||
-                (isDownload && extractTextPercentage(title, text) != null)
+                (isDownload && extractTextPercentage(title, text) != null) ||
+                (isDownload && isOngoing)
     }
 
     private fun extractTextPercentage(title: String?, text: String?): Int? {
@@ -770,6 +875,7 @@ class NotificationReaderService : NotificationListenerService() {
         val isNav = n.category == Notification.CATEGORY_NAVIGATION || sbn.packageName.let { it.contains("maps") || it.contains("waze") }
         val isTimer = (extras.getBoolean(Notification.EXTRA_SHOW_CHRONOMETER) || n.category == Notification.CATEGORY_ALARM) && n.`when` > 0
         val isMedia = template.contains("MediaStyle") || n.category == Notification.CATEGORY_TRANSPORT
+        val isMessage = n.category == Notification.CATEGORY_MESSAGE || template == "android.app.Notification.MessagingStyle"
         
         val title = resolveTitle(sbn)
         val text = resolveText(extras)
@@ -781,6 +887,7 @@ class NotificationReaderService : NotificationListenerService() {
             isNav -> NotificationType.NAVIGATION
             isTimer -> NotificationType.TIMER
             isMedia -> NotificationType.MEDIA
+            isMessage -> NotificationType.MESSAGE
             hasProgress -> {
                 if (isDownload) {
                     NotificationType.DOWNLOAD
@@ -823,7 +930,25 @@ class NotificationReaderService : NotificationListenerService() {
                 pendingIntent
             )
         } else {
-            sbn.notification.contentIntent?.let { builder.setContentIntent(it) }
+            sbn.notification.contentIntent?.let { originalIntent ->
+                if (detectNotificationType(sbn) == NotificationType.MESSAGE) {
+                    val clickIntent = Intent("com.d4viddf.hyperbridge.ISLAND_CLICKED").apply {
+                        setPackage(packageName)
+                        putExtra("sbn_key", sbn.key)
+                        putExtra("bridge_id", bridgeId)
+                        putExtra("original_intent", originalIntent)
+                    }
+                    val clickPendingIntent = PendingIntent.getBroadcast(
+                        this,
+                        bridgeId,
+                        clickIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    )
+                    builder.setContentIntent(clickPendingIntent)
+                } else {
+                    builder.setContentIntent(originalIntent)
+                }
+            }
         }
 
         val notification = builder.build()
@@ -832,7 +957,7 @@ class NotificationReaderService : NotificationListenerService() {
         if (!shouldAlertOnce) {
             ShizukuManager.notifyWithCancel(this, bridgeId, notification)
         } else {
-            ShizukuManager.notify(this, bridgeId, notification)
+            NotificationManagerCompat.from(this).notify(bridgeId, notification)
         }
 
         activeTranslations[sbn.key] = bridgeId
@@ -959,10 +1084,8 @@ class NotificationReaderService : NotificationListenerService() {
         if (globalBlockedTerms.any { "$title $text".contains(it, true) }) return true
 
         if ((notification.flags and Notification.FLAG_GROUP_SUMMARY) != 0) {
-            // We previously blocked GROUP_ALERT_CHILDREN, but some apps like Telegram 
-            // use it while silencing their actual children, leading to no alerts at all.
-            // Let's just allow group summaries if they have actual text.
-            if (pkg.contains("whatsapp", ignoreCase = true)) return true
+            val type = detectNotificationType(sbn)
+            if (type != NotificationType.MESSAGE) return true
             if (text.isEmpty() || title.isEmpty()) return true
         }
 
@@ -977,9 +1100,10 @@ class NotificationReaderService : NotificationListenerService() {
     private fun isAppAllowed(packageName: String): Boolean = allowedPackageSet.contains(packageName)
 
     override fun onListenerConnected() { Log.i(TAG, "HyperBridge Service Connected") }
-    override fun onDestroy() { 
+    override fun onDestroy() {
         super.onDestroy()
         unregisterReceiver(userUnlockedReceiver)
+        unregisterReceiver(islandClickReceiver)
         serviceScope.cancel() 
     }
 }
