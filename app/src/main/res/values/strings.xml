@@ -691,11 +691,16 @@
     <string name="widget_layout_snapshot">Preview of the widget</string>
 
     <string name="changelog_0_5_5">
+        <b>Live Updates &amp; Islands</b>\n
+              • <b>Icons:</b> Fixed an issue where the original app icon wouldn\'t display properly on Android 16 Live Updates.\n
+              • <b>Inline Replies:</b> You can now use inline replies directly from Live Update notifications.\n
+              • <b>Island Removal:</b> Fixed an issue where islands were not being properly removed when dismissed.\n\n
         <b>Messaging Grouping Overhaul</b>\n
               • <b>Deduplication:</b> Completely reworked how messaging-style notifications (like WhatsApp) are grouped to prevent duplicated islands.\n\n
         <b>Fixes &amp; Stability</b>\n
               • <b>Update Migration:</b> Fixed a critical bug where updating the app wouldn\'t trigger the proper database migration logic.\n
               • <b>Defaults:</b> Disabled "Show in shade" by default on the onboarding screen.\n
+              • <b>Localization:</b> Resolved broken characters in translated strings.\n
     </string>
     <string name="title_0_5_5">Messaging &amp; Update Fixes</string>
 

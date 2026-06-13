@@ -573,11 +573,16 @@
     <string name="behavior_desc_glob_config">Determina el comportamiento de la isla.</string>
     <string name="widget_layout_snapshot">Vista previa del widget</string>
     <string name="changelog_0_5_5">
+        <b>Live Updates e Islas</b>\n
+              • <b>Iconos:</b> Solucionado un problema por el que el icono de la aplicación original no se mostraba correctamente en los Live Updates de Android 16.\n
+              • <b>Respuestas Rápidas:</b> Ahora puedes usar las respuestas rápidas directamente desde las notificaciones de Live Updates.\n
+              • <b>Cierre de Islas:</b> Solucionado un problema por el que las islas no se cerraban correctamente al descartarlas.\n\n
         <b>Renovación de Agrupación de Mensajes</b>\n
               • <b>Desduplicación:</b> Se ha rediseñado por completo la forma en que se agrupan las notificaciones de mensajería (como WhatsApp) para evitar islas duplicadas.\n\n
         <b>Correcciones y Estabilidad</b>\n
               • <b>Migración de Actualización:</b> Se ha solucionado un error crítico por el que la actualización de la aplicación no activaba correctamente la lógica de migración de la base de datos.\n
               • <b>Valores predeterminados:</b> Se ha desactivado \"Mostrar en panel\" por defecto en la pantalla de inicio.\n
+              • <b>Localización:</b> Se han corregido los caracteres corruptos en las cadenas traducidas.\n
     </string>
     <string name="title_0_5_5">Mensajería y Correcciones</string>
     <string name="changelog_0_5_2">        <b>¡Nueva Respuesta Rápida!</b>\n
