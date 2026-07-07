@@ -77,6 +77,11 @@ class LiveUpdateTranslator(
         // --- ACTIONS ---
         val rawActions = original?.actions ?: emptyArray()
         rawActions.forEachIndexed { index, action ->
+            val rawTitle = action.title?.toString() ?: ""
+            if (shouldSkipSystemAction(rawTitle)) {
+                return@forEachIndexed
+            }
+
             val iconCompat = if (action.getIcon() != null) {
                 IconCompat.createFromIcon(context, action.getIcon()!!)
             } else {
@@ -106,6 +111,16 @@ class LiveUpdateTranslator(
             }
 
             builder.addAction(NotificationCompat.Action.Builder(iconCompat, action.title, finalIntent).build())
+        }
+
+        if (type == NotificationType.MESSAGE || type == NotificationType.STANDARD) {
+            builder.addAction(
+                NotificationCompat.Action.Builder(
+                    IconCompat.createWithResource(context, android.R.drawable.ic_menu_close_clear_cancel),
+                    "Đóng",
+                    createDismissPendingIntent(sbn ?: return builder)
+                ).build()
+            )
         }
 
         // --- APPLY STYLES ---

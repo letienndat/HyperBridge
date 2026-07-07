@@ -88,6 +88,8 @@ class MessageTranslator(
         builder.setSmallIsland(picKey)
 
         // Add Actions
+        val dismissAction = createDismissHyperAction(sbn)
+
         if (bridgeActions.isNotEmpty()) {
             // [FIX] Specific configuration for Shade Text Buttons:
             // 1. actionBgColor = null -> Transparent Background
@@ -102,7 +104,7 @@ class MessageTranslator(
                     actionBgColor = null,
                     titleColor = "#FFFFFF"
                 )
-            }.toTypedArray()
+            }.plus(dismissAction).toTypedArray()
 
             // Set actions visible in shade
             builder.setTextButtons(*textActions)
@@ -116,6 +118,9 @@ class MessageTranslator(
             bridgeActions.forEach {
                 it.actionImage?.let { pic -> builder.addPicture(pic) }
             }
+        } else {
+            builder.setTextButtons(dismissAction)
+            builder.addHiddenAction(dismissAction)
         }
 
 

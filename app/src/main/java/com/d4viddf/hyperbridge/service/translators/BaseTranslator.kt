@@ -34,6 +34,7 @@ import com.d4viddf.hyperbridge.models.theme.ActionConfig
 import com.d4viddf.hyperbridge.models.theme.HyperTheme
 import com.d4viddf.hyperbridge.models.theme.ResourceType
 import com.d4viddf.hyperbridge.models.theme.ThemeResource
+import com.d4viddf.hyperbridge.service.NotificationReaderService
 import com.d4viddf.hyperbridge.ui.screens.theme.getShapeFromId
 import io.github.d4viddf.hyperisland_kit.HyperAction
 import io.github.d4viddf.hyperisland_kit.HyperPicture
@@ -288,6 +289,10 @@ abstract class BaseTranslator(
             val rawTitle = androidAction.title?.toString() ?: ""
             val isMarkAsRead = androidAction.semanticAction == Notification.Action.SEMANTIC_ACTION_MARK_AS_READ || rawTitle.equals("mark as read", ignoreCase = true)
 
+            if (shouldSkipSystemAction(rawTitle)) {
+                return@forEachIndexed
+            }
+
             if (config.removeOriginalNotification == true && hasRemoteInput) {
                 return@forEachIndexed
             }
@@ -382,12 +387,56 @@ abstract class BaseTranslator(
         return bridgeActions
     }
 
+    protected fun shouldSkipSystemAction(rawTitle: String): Boolean {
+        val normalizedTitle = rawTitle.trim().lowercase()
+        if (normalizedTitle.isEmpty()) return false
+
+        val blockedTitles = listOf(
+            "tắt thông báo",
+            "tat thong bao",
+            "turn off notifications",
+            "turn off notification",
+            "disable notifications",
+            "disable notification",
+            "notification settings",
+            "manage",
+            "settings"
+        )
+
+        return blockedTitles.any { normalizedTitle == it }
+    }
+
     // --- UTILS ---
 
     protected fun getTransparentPicture(key: String): HyperPicture {
         val conf = Bitmap.Config.ARGB_8888
         val transparentBitmap = createBitmap(96, 96, conf)
         return HyperPicture(key, transparentBitmap)
+    }
+
+    protected fun createDismissPendingIntent(sbn: StatusBarNotification): PendingIntent {
+        val intent = android.content.Intent(NotificationReaderService.ACTION_DISMISS_BRIDGE).apply {
+            setPackage(context.packageName)
+            putExtra("hyper_original_key", sbn.key)
+        }
+        return PendingIntent.getBroadcast(
+            context,
+            "dismiss_${sbn.key}".hashCode(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+    }
+
+    protected fun createDismissHyperAction(sbn: StatusBarNotification): HyperAction {
+        return HyperAction(
+            key = "dismiss_${sbn.key.hashCode()}",
+            title = "Đóng",
+            icon = null,
+            pendingIntent = createDismissPendingIntent(sbn),
+            actionIntentType = 1,
+            actionBgColor = null,
+            titleColor = "#FFFFFF"
+        )
     }
 
     protected fun getColoredPicture(key: String, resId: Int, colorHex: String): HyperPicture {

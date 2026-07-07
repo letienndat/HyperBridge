@@ -59,6 +59,7 @@ class NotificationReaderService : NotificationListenerService() {
     companion object {
         const val ACTION_RELOAD_THEME = "com.d4viddf.hyperbridge.ACTION_RELOAD_THEME"
         const val ACTION_PERFORM_MIGRATION = "com.d4viddf.hyperbridge.ACTION_PERFORM_MIGRATION"
+        const val ACTION_DISMISS_BRIDGE = "com.d4viddf.hyperbridge.ACTION_DISMISS_BRIDGE"
     }
 
     private val TAG = "HyperBridgeDebug"
@@ -153,6 +154,24 @@ class NotificationReaderService : NotificationListenerService() {
         }
     }
 
+    private val dismissBridgeReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action != ACTION_DISMISS_BRIDGE) return
+
+            val originalKey = intent.getStringExtra(EXTRA_ORIGINAL_KEY) ?: return
+            val bridgeId = activeTranslations[originalKey]
+
+            bridgeId?.let {
+                try {
+                    NotificationManagerCompat.from(context).cancel(it)
+                } catch (_: Exception) { }
+            }
+
+            cancelSourceNotification(originalKey)
+            cleanupCache(originalKey)
+        }
+    }
+
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     override fun onCreate() {
         super.onCreate()
@@ -166,6 +185,14 @@ class NotificationReaderService : NotificationListenerService() {
             this,
             islandClickReceiver,
             clickFilter,
+            androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED
+        )
+
+        val dismissFilter = IntentFilter(ACTION_DISMISS_BRIDGE)
+        androidx.core.content.ContextCompat.registerReceiver(
+            this,
+            dismissBridgeReceiver,
+            dismissFilter,
             androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED
         )
         
