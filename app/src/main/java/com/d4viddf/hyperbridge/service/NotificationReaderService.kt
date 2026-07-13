@@ -1,6 +1,7 @@
 package com.d4viddf.hyperbridge.service
 
 import android.Manifest
+import android.app.ActivityManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -132,6 +133,7 @@ class NotificationReaderService : NotificationListenerService() {
             if (intent.action == "com.d4viddf.hyperbridge.ISLAND_CLICKED") {
                 val sbnKey = intent.getStringExtra("sbn_key")
                 val bridgeId = intent.getIntExtra("bridge_id", -1)
+                val targetPackage = intent.getStringExtra("target_package")
                 @Suppress("DEPRECATION")
                 val originalIntent = intent.getParcelableExtra<PendingIntent>("original_intent")
 
@@ -140,6 +142,15 @@ class NotificationReaderService : NotificationListenerService() {
                         originalIntent.send()
                     } catch (e: PendingIntent.CanceledException) {
                         Log.e("HyperBridge", "PendingIntent canceled", e)
+                    }
+                }
+
+                if (!targetPackage.isNullOrEmpty()) {
+                    serviceScope.launch(Dispatchers.Main) {
+                        delay(300)
+                        if (!isAppInForeground(targetPackage)) {
+                            launchAppFallback(targetPackage)
+                        }
                     }
                 }
 
@@ -990,6 +1001,23 @@ class NotificationReaderService : NotificationListenerService() {
         }
     }
 
+    private fun isAppInForeground(packageName: String): Boolean {
+        val manager = getSystemService(ACTIVITY_SERVICE) as? ActivityManager ?: return false
+        val runningProcesses = manager.runningAppProcesses ?: return false
+        return runningProcesses.any {
+            it.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND &&
+                it.processName == packageName
+        }
+    }
+
+    private fun launchAppFallback(packageName: String) {
+        try {
+            val launchIntent = packageManager.getLaunchIntentForPackage(packageName) ?: return
+            launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            startActivity(launchIntent)
+        } catch (_: Exception) { }
+    }
+
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     private fun postStandardNotification(sbn: StatusBarNotification, bridgeId: Int, data: HyperIslandData, shouldAlertOnce: Boolean) {
         val builder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
@@ -1027,6 +1055,7 @@ class NotificationReaderService : NotificationListenerService() {
                         setPackage(packageName)
                         putExtra("sbn_key", sbn.key)
                         putExtra("bridge_id", bridgeId)
+                        putExtra("target_package", sbn.packageName)
                         putExtra("original_intent", originalIntent)
                     }
                     val clickPendingIntent = PendingIntent.getBroadcast(
